@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class BookingsService {
@@ -26,8 +27,8 @@ public class BookingsService {
     }
 
     public Booking createBooking(Booking booking) {
-        Flight flight = flightRepository.getFlight(booking.getFlightId());
         Customer customer = customerRepository.getCustomer(booking.getCustomerId());
+        Flight flight = flightRepository.getFlight(booking.getFlightId());
         booking.setReferenceNumber(1);
         return bookingRepository.save(booking);
     }
@@ -40,7 +41,7 @@ public class BookingsService {
         Iterable<Booking> allBookings = bookingRepository.findAll();
         List<Booking> bookings = new ArrayList<>();
         for (Booking booking : allBookings) {
-            if (booking.getCustomerId() == bookingSearchRequest.getCustomerId() || booking.getReferenceNumber() == bookingSearchRequest.getReferenceNumber()) {
+            if (Objects.equals(booking.getCustomerId(), bookingSearchRequest.getCustomerId()) || Objects.equals(booking.getReferenceNumber(), bookingSearchRequest.getReferenceNumber())) {
                 bookings.add(booking);
             }
         }

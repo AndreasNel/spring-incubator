@@ -14,3 +14,13 @@ server:
   port: 8203
   error:
     include-message: always
+
+booking:
+  flight-service:
+    base-url: http://localhost:8202
+    username: admin
+    password: is_a_lie
+  customer-service:
+    base-url: http://localhost:8201
+    username: admin
+    password: is_a_lie
