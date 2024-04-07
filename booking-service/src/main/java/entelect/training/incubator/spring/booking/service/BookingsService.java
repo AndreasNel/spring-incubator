@@ -1,5 +1,7 @@
 package entelect.training.incubator.spring.booking.service;
 
+import entelect.training.incubator.spring.booking.client.loyalty.LoyaltyClient;
+import entelect.training.incubator.spring.booking.client.loyalty.generated.CaptureRewardsResponse;
 import entelect.training.incubator.spring.booking.model.Booking;
 import entelect.training.incubator.spring.booking.model.BookingSearchRequest;
 import entelect.training.incubator.spring.booking.model.Customer;
@@ -7,6 +9,7 @@ import entelect.training.incubator.spring.booking.model.Flight;
 import entelect.training.incubator.spring.booking.repository.BookingRepository;
 import entelect.training.incubator.spring.booking.repository.CustomerRepository;
 import entelect.training.incubator.spring.booking.repository.FlightRepository;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,22 +18,32 @@ import java.util.Objects;
 
 @Service
 public class BookingsService {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BookingsService.class);
 
     private final BookingRepository bookingRepository;
     private final FlightRepository flightRepository;
     private final CustomerRepository customerRepository;
+    private final LoyaltyClient loyaltyClient;
 
-    public BookingsService(BookingRepository bookingRepository, FlightRepository flightRepository, CustomerRepository customerRepository) {
+    public BookingsService(BookingRepository bookingRepository, FlightRepository flightRepository, CustomerRepository customerRepository, LoyaltyClient loyaltyClient) {
         this.bookingRepository = bookingRepository;
         this.flightRepository = flightRepository;
         this.customerRepository = customerRepository;
+        this.loyaltyClient = loyaltyClient;
     }
 
     public Booking createBooking(Booking booking) {
         Customer customer = customerRepository.getCustomer(booking.getCustomerId());
         Flight flight = flightRepository.getFlight(booking.getFlightId());
-        booking.setReferenceNumber(1);
-        return bookingRepository.save(booking);
+        booking.setReferenceNumber((int) (Math.random() * (100 - 1) + 1));
+        Booking response = bookingRepository.save(booking);
+        try {
+            CaptureRewardsResponse rewardsResponse = loyaltyClient.captureRewards(customer.getPassportNumber(), flight.getSeatCost());
+            LOGGER.info("Capture rewards response: {}", rewardsResponse.getBalance());
+        } catch (Exception e) {
+            LOGGER.error("Unable to capture rewards for booking={}", booking, e);
+        }
+        return response;
     }
 
     public Booking getBooking(Integer id) {

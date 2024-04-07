@@ -49,7 +49,10 @@ public class BookingsController {
 
     @PostMapping("/search")
     public ResponseEntity<?> searchBookingsByCustomer(@RequestBody BookingSearchRequest bookingSearchRequest) {
-        LOGGER.info("Searching for all bookings with customer={}", bookingSearchRequest);
+        if (bookingSearchRequest.getCustomerId() == null && bookingSearchRequest.getReferenceNumber() == null) {
+           return new ResponseEntity<>("At least 1 of 'customerId' or 'referenceNumber' required.", HttpStatus.BAD_REQUEST);
+        }
+        LOGGER.info("Searching for all bookings with search request={}", bookingSearchRequest);
         final List<Booking> customerBookings = bookingsService.searchBookings(bookingSearchRequest);
         LOGGER.trace("Bookings found");
         return new ResponseEntity<>(customerBookings, HttpStatus.OK);

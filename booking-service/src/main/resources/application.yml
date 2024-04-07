@@ -24,3 +24,5 @@ booking:
     base-url: http://localhost:8201
     username: admin
     password: is_a_lie
+  loyalty-service:
+    base-url: http://localhost:8208

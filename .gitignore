@@ -108,3 +108,6 @@ hs_err_pid*
 # AWS IntelliJ plugin
 aws.xml
 
+# Generated code
+**/generated/**
+META-INF

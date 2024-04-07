@@ -7,4 +7,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Customer {
     private Integer customerId;
+    private String passportNumber;
 }
