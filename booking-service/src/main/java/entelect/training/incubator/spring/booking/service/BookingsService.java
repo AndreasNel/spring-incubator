@@ -3,6 +3,7 @@ package entelect.training.incubator.spring.booking.service;
 import entelect.training.incubator.spring.booking.client.loyalty.LoyaltyClient;
 import entelect.training.incubator.spring.booking.client.loyalty.generated.CaptureRewardsResponse;
 import entelect.training.incubator.spring.booking.model.Booking;
+import entelect.training.incubator.spring.booking.model.BookingMessage;
 import entelect.training.incubator.spring.booking.model.BookingSearchRequest;
 import entelect.training.incubator.spring.booking.model.Customer;
 import entelect.training.incubator.spring.booking.model.Flight;
@@ -24,12 +25,14 @@ public class BookingsService {
     private final FlightRepository flightRepository;
     private final CustomerRepository customerRepository;
     private final LoyaltyClient loyaltyClient;
+    private final MessagingService messagingService;
 
-    public BookingsService(BookingRepository bookingRepository, FlightRepository flightRepository, CustomerRepository customerRepository, LoyaltyClient loyaltyClient) {
+    public BookingsService(BookingRepository bookingRepository, FlightRepository flightRepository, CustomerRepository customerRepository, LoyaltyClient loyaltyClient, MessagingService messagingService) {
         this.bookingRepository = bookingRepository;
         this.flightRepository = flightRepository;
         this.customerRepository = customerRepository;
         this.loyaltyClient = loyaltyClient;
+        this.messagingService = messagingService;
     }
 
     public Booking createBooking(Booking booking) {
@@ -37,13 +40,30 @@ public class BookingsService {
         Flight flight = flightRepository.getFlight(booking.getFlightId());
         booking.setReferenceNumber((int) (Math.random() * (100 - 1) + 1));
         Booking response = bookingRepository.save(booking);
+        captureLoyaltyRewards(booking, customer, flight);
+        sendConfirmationMessage(booking, customer, flight);
+        return response;
+    }
+
+    private void sendConfirmationMessage(Booking booking, Customer customer, Flight flight) {
+        try {
+            BookingMessage bookingMessage = new BookingMessage();
+            bookingMessage.setPhoneNumber(customer.getPhoneNumber());
+            bookingMessage.setMessage("Molo Air: Confirming flight %s booked for %s %s on %s.".formatted(flight.getFlightNumber(), customer.getFirstName(), customer.getLastName(), flight.getDepartureTime()));
+            messagingService.sendMessage(bookingMessage);
+            LOGGER.info("Message request sent");
+        } catch (Exception e) {
+            LOGGER.error("Unable to send confirmation message for booking={}", booking, e);
+        }
+    }
+
+    private void captureLoyaltyRewards(Booking booking, Customer customer, Flight flight) {
         try {
             CaptureRewardsResponse rewardsResponse = loyaltyClient.captureRewards(customer.getPassportNumber(), flight.getSeatCost());
             LOGGER.info("Capture rewards response: {}", rewardsResponse.getBalance());
         } catch (Exception e) {
             LOGGER.error("Unable to capture rewards for booking={}", booking, e);
         }
-        return response;
     }
 
     public Booking getBooking(Integer id) {

@@ -9,6 +9,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+  artemis:
+    user: artemis
+    password: artemis
+    mode: native
 
 server:
   port: 8203

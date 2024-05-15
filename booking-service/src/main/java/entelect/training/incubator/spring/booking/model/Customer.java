@@ -8,4 +8,7 @@ import lombok.NoArgsConstructor;
 public class Customer {
     private Integer customerId;
     private String passportNumber;
+    private String phoneNumber;
+    private String firstName;
+    private String lastName;
 }

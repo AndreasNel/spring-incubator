@@ -1,6 +1,10 @@
 spring:
   application:
     name: notification-service
+  artemis:
+    mode: native
+    user: artemis
+    password: artemis
 
 server:
   port: 8206
